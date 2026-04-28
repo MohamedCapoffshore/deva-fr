@@ -1,0 +1,14 @@
+*.zip
+.vshot.md
+
+# Contains API token — keep out of version control
+.htaccess
+
+# Apache PHP proxies — replaced by Netlify Functions
+proxy.php
+proxy_faq.php
+get-token.php
+
+# Logs
+*.log
+debug.log

@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="language" content="fr" />
+		<meta name="robots" content="noindex, nofollow, noarchive" />
+
+		<style type="text/css">
+			body{
+				padding:100px;
+			}
+			.div1{
+				width:700px;
+				height:500px;
+				font-family: monospace;
+				color:black;
+				font-size: 13px;
+				text-align:center;
+			}
+		</style>
+	</head>
+	<body>
+		<form action="https://secure.safecharge.com/ppp/purchase.do" method="post" name="paymentForm">
+			<div class="div1">
+				You will be, automatically, redirected in 3 seconds.<br/><br/>
+
+				<!--img src="progressbar.gif" border="0" align="center"/><br/><br/ -->
+
+				If not, follow this link : <a href="javascript:document.forms['paymentForm'].submit()" alt="Redirection to register form">Redirect</a>
+			</div>
+
+		</form>
+
+		<script type="text/javascript">
+
+function getParamsFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const encoded = urlParams.get('params');
+
+    if (!encoded) return null;
+
+    try {
+        const decodedString = atob(decodeURIComponent(encoded));
+        return JSON.parse(decodedString);
+    } catch (e) {
+        console.error("Erreur de décodage des params", e);
+        return null;
+    }
+}
+
+function createHiddenInputs(data) {
+    const form = document.forms['paymentForm']; 
+
+    if (!form) {
+        console.error("Formulaire paymentForm introuvable");
+        return;
+    }
+
+    Object.entries(data).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const params = getParamsFromUrl();
+
+    if (params) {
+        createHiddenInputs(params);
+    }
+});
+
+			document.forms["paymentForm"].submit();
+		</script>
+
+	</body>
+</html>
