@@ -42,27 +42,28 @@ exports.handler = async (event) => {
     const fields = Object.fromEntries(new URLSearchParams(event.body));
 
     /* ── Honeypot ── */
-    if (fields._hp) return redirect('/thanks.html'); /* silent discard */
+    if (fields._hp) return redirect('/thanks.html');
 
     /* ── reCAPTCHA v3 ── */
-    if (!await verifyRecaptcha(fields['g-recaptcha-response'])) {
-        return redirect('/error.html');
-    }
+    const recaptchaOk = await verifyRecaptcha(fields['g-recaptcha-response']);
+    console.log('[proxy] recaptcha ok:', recaptchaOk, '| token present:', !!fields['g-recaptcha-response']);
+    if (!recaptchaOk) return redirect('/error.html');
 
     /* ── HMAC token validation ── */
     const secret = process.env.DEVA_HMAC_SECRET;
     const { token, ts } = fields;
-
-    if (!secret || !token || !ts || !verifyToken(secret, token, ts)) {
-        return redirect('/error.html');
-    }
+    const hmacOk = !!(secret && token && ts && verifyToken(secret, token, ts));
+    console.log('[proxy] hmac ok:', hmacOk, '| secret set:', !!secret, '| token present:', !!token, '| ts present:', !!ts);
+    if (!hmacOk) return redirect('/error.html');
 
     /* ── Timing: between 4 s and 30 min ── */
     const age = Date.now() - parseInt(ts, 10);
+    console.log('[proxy] age ms:', age);
     if (age < 4000 || age > 1_800_000) return redirect('/error.html');
 
     /* ── Build whitelisted payload ── */
     const apiToken = process.env.DEVA_API_TOKEN;
+    console.log('[proxy] apiToken set:', !!apiToken);
     if (!apiToken) return redirect('/error.html');
 
     const body = new URLSearchParams();
@@ -73,6 +74,7 @@ exports.handler = async (event) => {
 
     /* ── Forward to API ── */
     const endpoint = process.env.API_ENDPOINT_FORM;
+    console.log('[proxy] endpoint set:', !!endpoint);
     if (!endpoint) return redirect('/error.html');
 
     try {
@@ -81,9 +83,10 @@ exports.handler = async (event) => {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: body.toString()
         });
+        console.log('[proxy] upstream status:', response.status);
         if (!response.ok) return redirect('/error.html');
     } catch (err) {
-        console.error('proxy error:', err.message);
+        console.error('[proxy] fetch error:', err.message);
         return redirect('/error.html');
     }
 
