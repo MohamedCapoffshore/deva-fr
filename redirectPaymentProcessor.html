@@ -31,30 +31,36 @@
 
 		</form>
 
-		<script type="text/javascript">
+<script>
+async function loadPaymentData() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
 
-function getParamsFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const encoded = urlParams.get('params');
-
-    if (!encoded) return null;
+    if (!token) {
+        console.error("Token manquant");
+        return;
+    }
 
     try {
-        const decodedString = atob(decodeURIComponent(encoded));
-        return JSON.parse(decodedString);
-    } catch (e) {
-        console.error("Erreur de décodage des params", e);
-        return null;
+        const response = await fetch(`https://www.voyante-intuitive.com/nuvei/getPaymentData&token=${token}`);
+
+        if (!response.ok) {
+            throw new Error("Erreur API");
+        }
+
+        const data = await response.json();
+
+        createHiddenInputs(data);
+
+        document.forms["paymentForm"].submit();
+
+    } catch (err) {
+        console.error("Erreur :", err);
     }
 }
 
 function createHiddenInputs(data) {
-    const form = document.forms['paymentForm']; 
-
-    if (!form) {
-        console.error("Formulaire paymentForm introuvable");
-        return;
-    }
+    const form = document.forms['paymentForm'];
 
     Object.entries(data).forEach(([key, value]) => {
         const input = document.createElement("input");
@@ -65,15 +71,10 @@ function createHiddenInputs(data) {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const params = getParamsFromUrl();
+document.addEventListener("DOMContentLoaded", loadPaymentData);
 
-    if (params) {
-        createHiddenInputs(params);
-    }
-});
 
-			document.forms["paymentForm"].submit();
+		//	document.forms["paymentForm"].submit();
 		</script>
 
 	</body>
